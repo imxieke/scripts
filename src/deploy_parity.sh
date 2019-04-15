@@ -62,7 +62,8 @@ function upgrade_parity()
 	if [[ -f '/opt/parity/parity' ]]; then
 		sudo rm -fr /opt/parity/parity
 		sudo wget $(get_download_url) -O /opt/parity/parity
-		sudo chmod +x parity
+		sudo chmod +x /opt/parity/parity
+		sudo ln -s /opt/parity/parity /bin/parity
 	else
 		echo "Parity Look like Not Install ,skip it"
 	fi
