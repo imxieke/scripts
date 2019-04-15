@@ -72,6 +72,12 @@ function upgrade_parity()
 	echo "Install Success , start help with /opt/parity/parity -h "
 }
 
+function start ()
+{
+	nohup /opt/parity/parity --jsonrpc-interface 0.0.0.0 --jsonrpc-apis eth,net,web3,personal,parity --jsonrpc-port 8545 --jsonrpc-cors 0.0.0.0 --base-path /opt/parity/data/ 2>&1 | tee parity.log &
+	echo "Parity has Started"
+}
+
 case $1 in
 	version | -v )
 		/opt/parity/parity -v | grep version\ Parity | awk -F ' ' '{print $2}'
