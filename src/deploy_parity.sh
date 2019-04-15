@@ -86,6 +86,6 @@ case $1 in
 		upgrade_parity
 		;;
 	* )
-		echo "Command usage: install |  "
+		echo "Command usage: install | reinstall | upgrade | version | latest-version  "
 		;;
 esac
