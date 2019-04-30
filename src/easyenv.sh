@@ -211,6 +211,14 @@ Disk:	${diskUsed} / ${diskFree} / ${diskSize} Used / Free /Total
 "
 }
 
+function devenv()
+{
+	apt install -y build-essential ca-certificates curl wget jq htop neovim gcc g++ make cmake \
+	python python3 python-pip python3-pip libssl-dev libjpeg-dev \
+	libpng-dev libreadline7 libreadlinedev pkg-config autoconf automake \
+	libxml2-dev
+}
+
 # Install Bt Panel
 function install_btpanel()
 {
