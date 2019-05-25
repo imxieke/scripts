@@ -51,6 +51,14 @@ function toolkit()
 	done
 }
 
+function more_pkgs()
+{
+	PKGS="net-tools"
+	for pkg in ${PKGS}; do
+		apt install -y ${pkg}
+	done
+}
+
 function iotest()
 {
 	dd if=/dev/zero of=/tmp/ramdisk/zero bs=4k count=10000 # Write
