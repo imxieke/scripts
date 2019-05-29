@@ -1,5 +1,5 @@
 # scripts
 
-Script Collect 
+Script Collect
 
 Project : https://github.com/imxieke/scripts
