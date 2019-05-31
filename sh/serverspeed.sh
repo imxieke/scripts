@@ -1,0 +1,1 @@
+<html><body>You are being <a href="https://raw.githubusercontent.com/91yun/serverspeeder/master/serverspeeder.sh">redirected</a>.</body></html>
