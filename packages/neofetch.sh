@@ -35,7 +35,6 @@ function uninstall()
 	echo "=> ${NAME} uninstall complete "
 }
 
-
 case $1 in
 	install )
 		download
