@@ -2,14 +2,13 @@
 #
 # Description: Auto system info & I/O test & network to China script
 #
-# Copyright (C) 2017 - 2018 Oldking <oooldking@gmail.com>
+# Copyright (C) 2017 - 2020 Oldking <oooldking@gmail.com>
 #
 # Thanks: Bench.sh <i@teddysun.com>
 #
 # URL: https://www.oldking.net/350.html
 #
 
-# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
@@ -21,13 +20,12 @@ about() {
 	echo " ========================================================= "
 	echo " \                 Superbench.sh  Script                 / "
 	echo " \       Basic system info, I/O test and speedtest       / "
-	echo " \                   v1.1.4 (1 Jan 2019)                 / "
+	echo " \                   v1.1.7 (7 Apr 2020)                 / "
 	echo " \                   Created by Oldking                  / "
 	echo " ========================================================= "
 	echo ""
 	echo " Intro: https://www.oldking.net/350.html"
-	echo " Copyright (C) 2019 Oldking oooldking@gmail.com"
-	echo -e " ${RED}Happy New Year!${PLAIN}"
+	echo " Copyright (C) 2020 Oldking oooldking@gmail.com"
 	echo ""
 }
 
@@ -44,7 +42,6 @@ cancel() {
 trap cancel SIGINT
 
 benchinit() {
-	# check release
 	if [ -f /etc/redhat-release ]; then
 	    release="centos"
 	elif cat /etc/issue | grep -Eqi "debian"; then
@@ -61,14 +58,9 @@ benchinit() {
 	    release="centos"
 	fi
 
-	# check root
 	[[ $EUID -ne 0 ]] && echo -e "${RED}Error:${PLAIN} This script must be run as root!" && exit 1
 
-	# check python
 	if  [ ! -e '/usr/bin/python' ]; then
-	        #echo -e
-	        #read -p "${RED}Error:${PLAIN} python is not install. You must be install python command at first.\nDo you want to install? [y/n]" is_install
-	        #if [[ ${is_install} == "y" || ${is_install} == "Y" ]]; then
 	        echo " Installing Python ..."
 	            if [ "${release}" == "centos" ]; then
 	            		yum update > /dev/null 2>&1
@@ -77,17 +69,10 @@ benchinit() {
 	                	apt-get update > /dev/null 2>&1
 	                    apt-get -y install python > /dev/null 2>&1
 	                fi
-	        #else
-	        #    exit
-	        #fi
 	        
 	fi
 
-	# check curl
 	if  [ ! -e '/usr/bin/curl' ]; then
-	    #echo -e
-	    #read -p "${RED}Error:${PLAIN} curl is not install. You must be install curl command at first.\nDo you want to install? [y/n]" is_install
-	    #if [[ ${is_install} == "y" || ${is_install} == "Y" ]]; then
 	        echo " Installing Curl ..."
 	            if [ "${release}" == "centos" ]; then
 	                yum update > /dev/null 2>&1
@@ -96,16 +81,9 @@ benchinit() {
 	                apt-get update > /dev/null 2>&1
 	                apt-get -y install curl > /dev/null 2>&1
 	            fi
-	    #else
-	    #    exit
-	    #fi
 	fi
 
-	# check wget
 	if  [ ! -e '/usr/bin/wget' ]; then
-	    #echo -e
-	    #read -p "${RED}Error:${PLAIN} wget is not install. You must be install wget command at first.\nDo you want to install? [y/n]" is_install
-	    #if [[ ${is_install} == "y" || ${is_install} == "Y" ]]; then
 	        echo " Installing Wget ..."
 	            if [ "${release}" == "centos" ]; then
 	                yum update > /dev/null 2>&1
@@ -114,62 +92,30 @@ benchinit() {
 	                apt-get update > /dev/null 2>&1
 	                apt-get -y install wget > /dev/null 2>&1
 	            fi
-	    #else
-	    #    exit
-	    #fi
 	fi
 
-	# install virt-what
-	#if  [ ! -e '/usr/sbin/virt-what' ]; then
-	#	echo "Installing Virt-what ..."
-	#    if [ "${release}" == "centos" ]; then
-	#    	yum update > /dev/null 2>&1
-	#        yum -y install virt-what > /dev/null 2>&1
-	#    else
-	#    	apt-get update > /dev/null 2>&1
-	#        apt-get -y install virt-what > /dev/null 2>&1
-	#    fi      
-	#fi
-
-	# install jq
-	#if  [ ! -e '/usr/bin/jq' ]; then
-	# 	echo " Installing Jq ..."
-    #		if [ "${release}" == "centos" ]; then
-	#	    yum update > /dev/null 2>&1
-	#	    yum -y install jq > /dev/null 2>&1
-	#	else
-	#	    apt-get update > /dev/null 2>&1
-	#	    apt-get -y install jq > /dev/null 2>&1
-	#	fi      
-	#fi
-
-	# install speedtest-cli
-	if  [ ! -e 'speedtest.py' ]; then
+	if  [ ! -e './speedtest-cli/speedtest' ]; then
 		echo " Installing Speedtest-cli ..."
-		wget --no-check-certificate https://raw.github.com/sivel/speedtest-cli/master/speedtest.py > /dev/null 2>&1
+		wget --no-check-certificate -qO speedtest.tgz https://cdn.jsdelivr.net/gh/oooldking/script@1.1.7/speedtest_cli/ookla-speedtest-1.0.0-$(uname -m)-linux.tgz > /dev/null 2>&1
 	fi
-	chmod a+rx speedtest.py
+	mkdir -p speedtest-cli && tar zxvf speedtest.tgz -C ./speedtest-cli/ > /dev/null 2>&1 && chmod a+rx ./speedtest-cli/speedtest
 
-
-	# install tools.py
 	if  [ ! -e 'tools.py' ]; then
 		echo " Installing tools.py ..."
-		wget --no-check-certificate https://raw.githubusercontent.com/oooldking/script/master/tools.py > /dev/null 2>&1
+		wget --no-check-certificate https://cdn.jsdelivr.net/gh/oooldking/script@1.1.7/tools.py > /dev/null 2>&1
 	fi
 	chmod a+rx tools.py
 
-	# install fast.com-cli
 	if  [ ! -e 'fast_com.py' ]; then
 		echo " Installing Fast.com-cli ..."
-		wget --no-check-certificate https://raw.githubusercontent.com/sanderjo/fast.com/master/fast_com.py > /dev/null 2>&1
-		wget --no-check-certificate https://raw.githubusercontent.com/sanderjo/fast.com/master/fast_com_example_usage.py > /dev/null 2>&1
+		wget --no-check-certificate https://cdn.jsdelivr.net/gh/sanderjo/fast.com@master/fast_com.py > /dev/null 2>&1
+		wget --no-check-certificate https://cdn.jsdelivr.net/gh/sanderjo/fast.com@master/fast_com_example_usage.py > /dev/null 2>&1
 	fi
 	chmod a+rx fast_com.py
 	chmod a+rx fast_com_example_usage.py
 
 	sleep 5
 
-	# start
 	start=$(date +%s) 
 }
 
@@ -185,44 +131,39 @@ next() {
 
 speed_test(){
 	if [[ $1 == '' ]]; then
-		temp=$(python speedtest.py --share 2>&1)
-		is_down=$(echo "$temp" | grep 'Download')
-		result_speed=$(echo "$temp" | awk -F ' ' '/results/{print $3}')
-		if [[ ${is_down} ]]; then
-	        local REDownload=$(echo "$temp" | awk -F ':' '/Download/{print $2}')
-	        local reupload=$(echo "$temp" | awk -F ':' '/Upload/{print $2}')
-	        local relatency=$(echo "$temp" | awk -F ':' '/Hosted/{print $2}')
+		speedtest-cli/speedtest -p no --accept-license > $speedLog 2>&1
+		is_upload=$(cat $speedLog | grep 'Upload')
+		result_speed=$(cat $speedLog | awk -F ' ' '/Result/{print $3}')
+		if [[ ${is_upload} ]]; then
+	        local REDownload=$(cat $speedLog | awk -F ' ' '/Download/{print $3}')
+	        local reupload=$(cat $speedLog | awk -F ' ' '/Upload/{print $3}')
+	        local relatency=$(cat $speedLog | awk -F ' ' '/Latency/{print $2}')
 
 	        temp=$(echo "$relatency" | awk -F '.' '{print $1}')
         	if [[ ${temp} -gt 50 ]]; then
-            	relatency=" (*)"${relatency}
+            	relatency="(*)"${relatency}
         	fi
 	        local nodeName=$2
 
 	        temp=$(echo "${REDownload}" | awk -F ' ' '{print $1}')
 	        if [[ $(awk -v num1=${temp} -v num2=0 'BEGIN{print(num1>num2)?"1":"0"}') -eq 1 ]]; then
-	        	printf "${YELLOW}%-17s${GREEN}%-18s${RED}%-20s${SKYBLUE}%-12s${PLAIN}\n" " ${nodeName}" "${reupload}" "${REDownload}" "${relatency}" | tee -a $log
+	        	printf "${YELLOW}%-18s${GREEN}%-18s${RED}%-20s${SKYBLUE}%-12s${PLAIN}\n" " ${nodeName}" "${reupload} Mbit/s" "${REDownload} Mbit/s" "${relatency} ms" | tee -a $log
 	        fi
 		else
 	        local cerror="ERROR"
 		fi
 	else
-		temp=$(python speedtest.py --server $1 --share 2>&1)
-		is_down=$(echo "$temp" | grep 'Download') 
-		if [[ ${is_down} ]]; then
-	        local REDownload=$(echo "$temp" | awk -F ':' '/Download/{print $2}')
-	        local reupload=$(echo "$temp" | awk -F ':' '/Upload/{print $2}')
-	        local relatency=$(echo "$temp" | awk -F ':' '/Hosted/{print $2}')
-	        #local relatency=$(pingtest $3)
-	        #temp=$(echo "$relatency" | awk -F '.' '{print $1}')
-        	#if [[ ${temp} -gt 1000 ]]; then
-            	relatency=" - "
-        	#fi
+		speedtest-cli/speedtest -p no -s $1 --accept-license > $speedLog 2>&1
+		is_upload=$(cat $speedLog | grep 'Upload')
+		if [[ ${is_upload} ]]; then
+	        local REDownload=$(cat $speedLog | awk -F ' ' '/Download/{print $3}')
+	        local reupload=$(cat $speedLog | awk -F ' ' '/Upload/{print $3}')
+	        local relatency=$(cat $speedLog | awk -F ' ' '/Latency/{print $2}')
 	        local nodeName=$2
 
 	        temp=$(echo "${REDownload}" | awk -F ' ' '{print $1}')
 	        if [[ $(awk -v num1=${temp} -v num2=0 'BEGIN{print(num1>num2)?"1":"0"}') -eq 1 ]]; then
-	        	printf "${YELLOW}%-17s${GREEN}%-18s${RED}%-20s${SKYBLUE}%-12s${PLAIN}\n" " ${nodeName}" "${reupload}" "${REDownload}" "${relatency}" | tee -a $log
+	        	printf "${YELLOW}%-18s${GREEN}%-18s${RED}%-20s${SKYBLUE}%-12s${PLAIN}\n" " ${nodeName}" "${reupload} Mbit/s" "${REDownload} Mbit/s" "${relatency} ms" | tee -a $log
 			fi
 		else
 	        local cerror="ERROR"
@@ -234,30 +175,31 @@ print_speedtest() {
 	printf "%-18s%-18s%-20s%-12s\n" " Node Name" "Upload Speed" "Download Speed" "Latency" | tee -a $log
     speed_test '' 'Speedtest.net'
     speed_fast_com
-    speed_test '5316' 'Nanjing   CT'
-    speed_test '12637' 'Xiangyang CT'
-    speed_test '7509' 'Hangzhou  CT'
-	speed_test '19076' 'Chongqing CT'
-	speed_test '5083' 'Shanghai  CU'
-	speed_test '4863' "Xi'an     CU"
-	speed_test '5726' 'Chongqing CU'
-	speed_test '4665' 'Shanghai  CM'
-	speed_test '4575' 'Chengdu   CM'
-	speed_test '6168' 'Kunming   CM'
-	speed_test '6611' 'Guangzhou CM'
-	 
-	rm -rf speedtest.py
+    speed_test '27377' 'Beijing 5G   CT'
+    speed_test '26352' 'Nanjing 5G   CT'
+    speed_test '17145' 'Hefei 5G     CT'
+	speed_test '27594' 'Guangzhou 5G CT'
+	speed_test '27154' 'TianJin 5G   CU'
+	speed_test '24447' 'Shanghai 5G  CU'
+	speed_test '26678' 'Guangzhou 5G CU'
+	speed_test '17184' 'Tianjin 5G   CM'
+	speed_test '26850' 'Wuxi 5G      CM'
+	speed_test '27249' 'Nanjing 5G   CM'
+	speed_test '26404' 'Hefei 5G     CM'
+	speed_test '28491' 'Changsha 5G  CM'
+
+	rm -rf speedtest*
 }
 
 print_speedtest_fast() {
 	printf "%-18s%-18s%-20s%-12s\n" " Node Name" "Upload Speed" "Download Speed" "Latency" | tee -a $log
     speed_test '' 'Speedtest.net'
     speed_fast_com
-    speed_test '7509' 'Hangzhou  CT'
-	speed_test '5083' 'Shanghai  CU'
-	speed_test '4575' 'Chengdu   CM'
+    speed_test '27377' 'Beijing 5G   CT'
+	speed_test '24447' 'ShangHai 5G  CU'
+	speed_test '27249' 'Nanjing 5G   CM'
 	 
-	rm -rf speedtest.py
+	rm -rf speedtest*
 }
 
 speed_fast_com() {
@@ -305,7 +247,6 @@ power_time() {
 }
 
 install_smart() {
-	# install smartctl
 	if  [ ! -e '/usr/sbin/smartctl' ]; then
 		echo "Installing Smartctl ..."
 	    if [ "${release}" == "centos" ]; then
@@ -316,61 +257,6 @@ install_smart() {
 	        apt-get -y install smartmontools > /dev/null 2>&1
 	    fi      
 	fi
-}
-
-ip_info(){
-	# use jq tool
-	result=$(curl -s 'http://ip-api.com/json')
-	country=$(echo $result | jq '.country' | sed 's/\"//g')
-	city=$(echo $result | jq '.city' | sed 's/\"//g')
-	isp=$(echo $result | jq '.isp' | sed 's/\"//g')
-	as_tmp=$(echo $result | jq '.as' | sed 's/\"//g')
-	asn=$(echo $as_tmp | awk -F ' ' '{print $1}')
-	org=$(echo $result | jq '.org' | sed 's/\"//g')
-	countryCode=$(echo $result | jq '.countryCode' | sed 's/\"//g')
-	region=$(echo $result | jq '.regionName' | sed 's/\"//g')
-	if [ -z "$city" ]; then
-		city=${region}
-	fi
-
-	echo -e " ASN & ISP            : ${SKYBLUE}$asn, $isp${PLAIN}" | tee -a $log
-	echo -e " Organization         : ${YELLOW}$org${PLAIN}" | tee -a $log
-	echo -e " Location             : ${SKYBLUE}$city, ${YELLOW}$country / $countryCode${PLAIN}" | tee -a $log
-	echo -e " Region               : ${SKYBLUE}$region${PLAIN}" | tee -a $log
-}
-
-ip_info2(){
-	# no jq
-	country=$(curl -s https://ipapi.co/country_name/)
-	city=$(curl -s https://ipapi.co/city/)
-	asn=$(curl -s https://ipapi.co/asn/)
-	org=$(curl -s https://ipapi.co/org/)
-	countryCode=$(curl -s https://ipapi.co/country/)
-	region=$(curl -s https://ipapi.co/region/)
-
-	echo -e " ASN & ISP            : ${SKYBLUE}$asn${PLAIN}" | tee -a $log
-	echo -e " Organization         : ${SKYBLUE}$org${PLAIN}" | tee -a $log
-	echo -e " Location             : ${SKYBLUE}$city, ${GREEN}$country / $countryCode${PLAIN}" | tee -a $log
-	echo -e " Region               : ${SKYBLUE}$region${PLAIN}" | tee -a $log
-}
-
-ip_info3(){
-	# use python tool
-	country=$(python ip_info.py country)
-	city=$(python ip_info.py city)
-	isp=$(python ip_info.py isp)
-	as_tmp=$(python ip_info.py as)
-	asn=$(echo $as_tmp | awk -F ' ' '{print $1}')
-	org=$(python ip_info.py org)
-	countryCode=$(python ip_info.py countryCode)
-	region=$(python ip_info.py regionName)
-
-	echo -e " ASN & ISP            : ${SKYBLUE}$asn, $isp${PLAIN}" | tee -a $log
-	echo -e " Organization         : ${GREEN}$org${PLAIN}" | tee -a $log
-	echo -e " Location             : ${SKYBLUE}$city, ${GREEN}$country / $countryCode${PLAIN}" | tee -a $log
-	echo -e " Region               : ${SKYBLUE}$region${PLAIN}" | tee -a $log
-
-	rm -rf ip_info.py
 }
 
 ip_info4(){
@@ -413,8 +299,7 @@ virt_check(){
 
 	virtualx=$(dmesg) 2>/dev/null
 
-	# check dmidecode cmd
-	if  [ $(which dmidecode) ]; then
+    if  [ $(which dmidecode) ]; then
 		sys_manu=$(dmidecode -s system-manufacturer) 2>/dev/null
 		sys_product=$(dmidecode -s system-product-name) 2>/dev/null
 		sys_ver=$(dmidecode -s system-version) 2>/dev/null
@@ -435,6 +320,8 @@ virt_check(){
 	elif [[ "$virtualx" == *kvm-clock* ]]; then
 		virtual="KVM"
 	elif [[ "$cname" == *KVM* ]]; then
+		virtual="KVM"
+	elif [[ "$cname" == *QEMU* ]]; then
 		virtual="KVM"
 	elif [[ "$virtualx" == *"VMware Virtual Platform"* ]]; then
 		virtual="VMware"
@@ -465,14 +352,6 @@ power_time_check(){
 }
 
 freedisk() {
-	# check free space
-	#spacename=$( df -m . | awk 'NR==2 {print $1}' )
-	#spacenamelength=$(echo ${spacename} | awk '{print length($0)}')
-	#if [[ $spacenamelength -gt 20 ]]; then
-   	#	freespace=$( df -m . | awk 'NR==3 {print $3}' )
-	#else
-	#	freespace=$( df -m . | awk 'NR==2 {print $4}' )
-	#fi
 	freespace=$( df -m . | awk 'NR==2 {print $4}' )
 	if [[ $freespace == "" ]]; then
 		$freespace=$( df -m . | awk 'NR==3 {print $3}' )
@@ -528,7 +407,7 @@ print_io() {
 
 print_system_info() {
 	echo -e " CPU Model            : ${SKYBLUE}$cname${PLAIN}" | tee -a $log
-	echo -e " CPU Cores            : ${YELLOW}$cores Cores ${SKYBLUE}@ $freq MHz $arch${PLAIN}" | tee -a $log
+	echo -e " CPU Cores            : ${YELLOW}$cores Cores ${SKYBLUE}$freq MHz $arch${PLAIN}" | tee -a $log
 	echo -e " CPU Cache            : ${SKYBLUE}$corescache ${PLAIN}" | tee -a $log
 	echo -e " OS                   : ${SKYBLUE}$opsy ($lbit Bit) ${YELLOW}$virtual${PLAIN}" | tee -a $log
 	echo -e " Kernel               : ${SKYBLUE}$kern${PLAIN}" | tee -a $log
@@ -550,19 +429,15 @@ print_end_time() {
 	else
 		echo -ne " Finished in  : ${time} sec" | tee -a $log
 	fi
-	#echo -ne "\n Current time : "
-	#echo $(date +%Y-%m-%d" "%H:%M:%S)
+
 	printf '\n' | tee -a $log
-	#utc_time=$(date -u '+%F %T')
-	#bj_time=$(date +%Y-%m-%d" "%H:%M:%S -d '+8 hours')
+
 	bj_time=$(curl -s http://cgi.im.qq.com/cgi-bin/cgi_svrtime)
-	#utc_time=$(date +"$bj_time" -d '-8 hours')
 
 	if [[ $(echo $bj_time | grep "html") ]]; then
 		bj_time=$(date -u +%Y-%m-%d" "%H:%M:%S -d '+8 hours')
 	fi
 	echo " Timestamp    : $bj_time GMT+8" | tee -a $log
-	#echo " Finished!"
 	echo " Results      : $log"
 }
 
@@ -582,26 +457,21 @@ get_system_info() {
 	arch=$( uname -m )
 	lbit=$( getconf LONG_BIT )
 	kern=$( uname -r )
-	#ipv6=$( wget -qO- -t1 -T2 ipv6.icanhazip.com )
-	disk_size1=($( LANG=C df -hPl | grep -wvE '\-|none|tmpfs|overlay|shm|udev|devtmpfs|by-uuid|chroot|Filesystem' | awk '{print $2}' ))
-	disk_size2=($( LANG=C df -hPl | grep -wvE '\-|none|tmpfs|overlay|shm|udev|devtmpfs|by-uuid|chroot|Filesystem' | awk '{print $3}' ))
+
+	disk_size1=$( LANG=C df -hPl | grep -wvE '\-|none|tmpfs|overlay|shm|udev|devtmpfs|by-uuid|chroot|Filesystem' | awk '{print $2}' )
+	disk_size2=$( LANG=C df -hPl | grep -wvE '\-|none|tmpfs|overlay|shm|udev|devtmpfs|by-uuid|chroot|Filesystem' | awk '{print $3}' )
 	disk_total_size=$( calc_disk ${disk_size1[@]} )
 	disk_used_size=$( calc_disk ${disk_size2[@]} )
-	#tcp congestion control
-	tcpctrl=$( sysctl net.ipv4.tcp_congestion_control | awk -F ' ' '{print $3}' )
 
-	#tmp=$(python tools.py disk 0)
-	#disk_total_size=$(echo $tmp | sed s/G//)
-	#tmp=$(python tools.py disk 1)
-	#disk_used_size=$(echo $tmp | sed s/G//)
+	tcpctrl=$( sysctl net.ipv4.tcp_congestion_control | awk -F ' ' '{print $3}' )
 
 	virt_check
 }
 
 print_intro() {
 	printf ' Superbench.sh -- https://www.oldking.net/350.html\n' | tee -a $log
-	printf " Mode  : \e${GREEN}%s\e${PLAIN}    Version : \e${GREEN}%s${PLAIN}\n" $mode_name 1.1.4 | tee -a $log
-	printf ' Usage : wget -qO- git.io/superbench.sh | bash\n' | tee -a $log
+	printf " Mode  : \e${GREEN}%s\e${PLAIN}    Version : \e${GREEN}%s${PLAIN}\n" $mode_name 1.1.7 | tee -a $log
+	printf ' Usage : wget -qO- sb.oldking.net | bash\n' | tee -a $log
 }
 
 sharetest() {
@@ -610,7 +480,7 @@ sharetest() {
 	log_preupload
 	case $1 in
 	'ubuntu')
-		share_link=$( curl -v --data-urlencode "content@$log_up" -d "poster=superbench.sh" -d "syntax=text" "https://paste.ubuntu.com" 2>&1 | \
+		share_link="https://paste.ubuntu.com"$( curl -v --data-urlencode "content@$log_up" -d "poster=superbench.sh" -d "syntax=text" "https://paste.ubuntu.com" 2>&1 | \
 			grep "Location" | awk '{print $3}' );;
 	'haste' )
 		share_link=$( curl -X POST -s -d "$(cat $log)" https://hastebin.com/documents | awk -F '"' '{print "https://hastebin.com/"$4}' );;
@@ -620,7 +490,6 @@ sharetest() {
 		share_link=$( curl -sF c=@- https://ptpb.pw/?u=1 < $log );;
 	esac
 
-	# print result info
 	echo " · $share_link" | tee -a $log
 	next
 	echo ""
@@ -634,30 +503,11 @@ log_preupload() {
 	$(cat superbench.log 2>&1 | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" > $log_up)
 }
 
-get_ip_whois_org_name(){
-	#ip=$(curl -s ip.sb)
-	result=$(curl -s https://rest.db.ripe.net/search.json?query-string=$(curl -s ip.sb))
-	#org_name=$(echo $result | jq '.objects.object.[1].attributes.attribute.[1].value' | sed 's/\"//g')
-	org_name=$(echo $result | jq '.objects.object[1].attributes.attribute[1]' | sed 's/\"//g')
-    echo $org_name;
-}
-
-pingtest() {
-	local ping_ms=$( ping -w 1 -c 1 $1 | grep 'rtt' | cut -d"/" -f5 )
-
-	# get download speed and print
-	if [[ $ping_ms == "" ]]; then
-		printf "ping error!"  | tee -a $log
-	else
-		printf "%3i.%s ms" "${ping_ms%.*}" "${ping_ms#*.}"  | tee -a $log
-	fi
-}
-
 cleanup() {
-	rm -f test_file_*;
-	rm -f speedtest.py;
-	rm -f fast_com*;
-	rm -f tools.py;
+	rm -f test_file_*
+	rm -rf speedtest*
+	rm -f fast_com*
+	rm -f tools.py
 	rm -f ip_json.json
 }
 
@@ -704,11 +554,10 @@ fast_bench(){
 	cleanup;
 }
 
-
-
-
-log="$HOME/superbench.log"
+log="./superbench.log"
 true > $log
+speedLog="./speedtest.log"
+true > $speedLog
 
 case $1 in
 	'info'|'-i'|'--i'|'-info'|'--info' )
@@ -741,8 +590,6 @@ case $1 in
 *)
     bench_all;;
 esac
-
-
 
 if [[  ! $is_share == "share" ]]; then
 	case $2 in

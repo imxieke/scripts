@@ -1,0 +1,59 @@
+Core 			default 5
+PDO 			default 5
+Phar 			default 5
+Reflection   	default 5
+SPL 			default 5
+SimpleXML 		default 5
+bcmath 			compile
+bz2
+calendar
+ctype			default 5
+curl
+date 			default 5
+dom 			default 5
+enchant
+ereg 			default 5
+exif
+fileinfo 		default 5
+filter 			default 5
+ftp
+gd
+gettext
+gmp
+hash 			default 5
+iconv 			default 5
+intl
+json 			default 5
+libxml 			default 5
+mbstring
+mysqli
+mysqlnd
+openssl
+pcntl
+pcre 			default 5
+pdo_mysql
+pdo_pgsql
+pdo_sqlite 		default 5
+pgsql
+posix 			default 5
+pspell
+readline
+recode
+session 		default
+shmop
+soap
+sockets
+sodium 			compile > 7.1
+sqlite3			default 5
+standard 		default 5
+sysvsem
+tidy			compile
+tokenizer 		default 5
+wddx 			compile < 7.4
+xml 			default 5
+xmlreader 		default 5
+xmlrpc 			compile
+xmlwriter 		default 5
+xsl 			compile
+zip  			compile
+zlib 			compile

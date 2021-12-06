@@ -42,10 +42,10 @@ case $1 in
     remove)
         apt-get remove $2 $3 $4 $5 $6 $7 $8 $9
         ;;
-        
+
     repair)
         rm -fr /var/cache/apt/archives/lock && rm -fr /var/lib/dpkg/lock
-    
+        ;;
     search)
         apt search $2 $3 $4 $5 $6 $7 $8 $9
         ;;
