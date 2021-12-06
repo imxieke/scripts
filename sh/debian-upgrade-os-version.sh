@@ -2,7 +2,7 @@
 ###
  # @Author: Cloudflying
  # @Date: 2021-12-06 13:52:13
- # @LastEditTime: 2021-12-06 16:21:11
+ # @LastEditTime: 2021-12-06 17:43:23
  # @LastEditors: Cloudflying
  # @Description: Upgrade debian os version
  # @FilePath: /scripts/sh/debian-upgrade-os-version.sh
@@ -23,8 +23,12 @@ echo -e "
 Warnning: This script is dangerous. If you don't know what you're doing, please exit immediately
 ###################################################################################################"
 
-[ -z $1 ] && echo -e "\ntype debian version to upgrade(can't downgrade) , support debian 10-11
-example: 10|buster 11|bullseye" && exit 1
+[ -z $1 ] && echo -e "
+type debian version to upgrade(can't downgrade) , support debian 10-11
+maybe have any depens error need fix manual
+example: 10|buster 11|bullseye
+"
+exit 1
 
 UPTO=$1
 
@@ -37,8 +41,10 @@ elif [[ "${_UPGRADECONFIRM}" == y* ]] || [[ "${_UPGRADECONFIRM}" == Y* ]] ; then
     echo "is confirmed, continue to next step now"
 elif [[ "${_UPGRADECONFIRM}" == n* ]] || [[ "${_UPGRADECONFIRM}" == N* ]] ; then
     echo "sorry you are type no, quit exec next step now"
+    exit 1
 else
     echo "sorry unknown $_UPGRADECONFIRM , type is wrong exit now"
+    exit 1
 fi
 
 # debian 8 can't get it
@@ -65,6 +71,9 @@ apt install --no-install-recommends -y gnupg
 
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 54404762BBB6E853
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 112695A0E562B32A
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 648ACFD622F3D138
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0E98404D386FA1D9
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 605C66F00D6C9793
 
 apt-get update -y && apt-get upgrade -y && apt full-upgrade -y
 
@@ -95,6 +104,7 @@ sed -i "s#${CODENAME}#${UPTO_CODENAME}#g" /etc/apt/sources.list
 apt-get update -y && apt-get upgrade -y && apt full-upgrade -y && apt-get dist-upgrade
 
 # Clean
+# debian 8 not have apt autoremove
 apt-get autoremove -y
 
 read -p "All is complete, reboot now ?" _CONFIRM_REBOOT
