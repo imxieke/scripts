@@ -2,7 +2,7 @@
 ###
  # @Author: Cloudflying
  # @Date: 2021-12-06 13:52:13
- # @LastEditTime: 2021-12-06 15:44:37
+ # @LastEditTime: 2021-12-06 15:53:22
  # @LastEditors: Cloudflying
  # @Description: Upgrade debian os version
  # @FilePath: /scripts/sh/debian-upgrade-os-version.sh
@@ -54,13 +54,17 @@ apt-get update -y && apt-get upgrade -y && apt full-upgrade -y
 case "$UPTO" in
     11|bullseye)
         UPTO_CODENAME='bullseye'
-        sed -i "s#${_SECUIRTY_URL}#${_LATEST_SECURITY_URL}#g" /etc/apt/sources.list
-        sed -i "s#debian-security ${_SECUIRTY_BRANCH}#bullseye-security#g" /etc/apt/sources.list
+        if [[ -n "${_SECUIRTY_URL}" ]]; then
+            sed -i "s#${_SECUIRTY_URL}#${_LATEST_SECURITY_URL}#g" /etc/apt/sources.list
+            sed -i "s#debian-security ${_SECUIRTY_BRANCH}#debian-security bullseye-security#g" /etc/apt/sources.list
+        fi
         ;;
     10|buster)
         UPTO_CODENAME='buster'
-        sed -i "s#${_SECUIRTY_URL}#${_LATEST_SECURITY_URL}#g" /etc/apt/sources.list
-        sed -i "s#debian-security ${_SECUIRTY_BRANCH}#buster/updates#g" /etc/apt/sources.list
+        if [[ -n "${_SECUIRTY_URL}" ]]; then
+            sed -i "s#${_SECUIRTY_URL}#${_LATEST_SECURITY_URL}#g" /etc/apt/sources.list
+            sed -i "s#debian-security ${_SECUIRTY_BRANCH}#debian-security buster/updates#g" /etc/apt/sources.list
+        fi
         ;;
     *)
         echo -e "unknow debian version ${UPTO}, please try again"
