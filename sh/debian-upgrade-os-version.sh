@@ -2,7 +2,7 @@
 ###
  # @Author: Cloudflying
  # @Date: 2021-12-06 13:52:13
- # @LastEditTime: 2021-12-06 14:48:14
+ # @LastEditTime: 2021-12-06 15:44:37
  # @LastEditors: Cloudflying
  # @Description: Upgrade debian os version
  # @FilePath: /scripts/sh/debian-upgrade-os-version.sh
@@ -23,8 +23,8 @@ echo -e "
 Warnning: This script is dangerous. If you don't know what you're doing, please exit immediately
 ###################################################################################################"
 
-[ -z $1 ] && echo -e "\ntype debian version to upgrade(can't downgrade) , support debian 6-11
-example: 6|squeeze 7|wheezy 8|jessie 9|stretch 10|buster 11|bullseye" && exit 1
+[ -z $1 ] && echo -e "\ntype debian version to upgrade(can't downgrade) , support debian 10-11
+example: 10|buster 11|bullseye" && exit 1
 
 UPTO=$1
 
@@ -43,29 +43,24 @@ fi
 
 # 
 CODENAME=$(grep '^VERSION_CODENAME=' /etc/os-release | awk -F '=' '{print $2}')
-
-cp /etc/apt/sources.list /etc/apt/sources.list.bak
+_SECUIRTY_URL=$(grep 'security' /etc/apt/sources.list | grep -v '#' | head -n 1 | awk -F ' ' '{print $2}')
+_SECUIRTY_BRANCH=$(grep 'security' /etc/apt/sources.list | grep -v '#' | head -n 1 | awk -F ' ' '{print $3}')
+_LATEST_SECURITY_URL='http://security.debian.org/debian-security'
+cp /etc/apt/sources.list /etc/apt/sources.list.bak.$(date +%s)
 
 apt-get update -y && apt-get upgrade -y && apt full-upgrade -y
 
+# debian-security include 
 case "$UPTO" in
     11|bullseye)
         UPTO_CODENAME='bullseye'
+        sed -i "s#${_SECUIRTY_URL}#${_LATEST_SECURITY_URL}#g" /etc/apt/sources.list
+        sed -i "s#debian-security ${_SECUIRTY_BRANCH}#bullseye-security#g" /etc/apt/sources.list
         ;;
     10|buster)
         UPTO_CODENAME='buster'
-        ;;
-    9|stretch)
-        UPTO_CODENAME='stretch'
-        ;;
-    8|jessie)
-        UPTO_CODENAME='jessie'
-        ;;
-    7|wheezy)
-        UPTO_CODENAME='wheezy'
-        ;;
-    6|squeeze)
-        UPTO_CODENAME='squeeze'
+        sed -i "s#${_SECUIRTY_URL}#${_LATEST_SECURITY_URL}#g" /etc/apt/sources.list
+        sed -i "s#debian-security ${_SECUIRTY_BRANCH}#buster/updates#g" /etc/apt/sources.list
         ;;
     *)
         echo -e "unknow debian version ${UPTO}, please try again"
