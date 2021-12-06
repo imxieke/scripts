@@ -2,7 +2,7 @@
 ###
  # @Author: Cloudflying
  # @Date: 2021-12-06 13:52:13
- # @LastEditTime: 2021-12-06 15:53:22
+ # @LastEditTime: 2021-12-06 16:21:11
  # @LastEditors: Cloudflying
  # @Description: Upgrade debian os version
  # @FilePath: /scripts/sh/debian-upgrade-os-version.sh
@@ -41,12 +41,30 @@ else
     echo "sorry unknown $_UPGRADECONFIRM , type is wrong exit now"
 fi
 
-# 
+# debian 8 can't get it
 CODENAME=$(grep '^VERSION_CODENAME=' /etc/os-release | awk -F '=' '{print $2}')
+
+# TOOD check /etc/debian_version or os-release VERSION_ID or /etc/issue ,maybe in winter
+if [[ -z "${CODENAME}" ]]; then
+    if [[ -n "$(command -v lsb_release)" ]]; then
+        CODENAME=$(lsb_release -cs)
+    elif [[ -n "$(grep '^VERSION=' /etc/os-release | awk -F '(' '{print $2}' | awk -F ')' '{print $1}')" ]]; then
+        CODENAME=$(grep '^VERSION=' /etc/os-release | awk -F '(' '{print $2}' | awk -F ')' '{print $1}')
+    else
+        echo "can't get debian codename exit"
+        exit 1
+    fi
+fi
+
 _SECUIRTY_URL=$(grep 'security' /etc/apt/sources.list | grep -v '#' | head -n 1 | awk -F ' ' '{print $2}')
 _SECUIRTY_BRANCH=$(grep 'security' /etc/apt/sources.list | grep -v '#' | head -n 1 | awk -F ' ' '{print $3}')
 _LATEST_SECURITY_URL='http://security.debian.org/debian-security'
 cp /etc/apt/sources.list /etc/apt/sources.list.bak.$(date +%s)
+
+apt install --no-install-recommends -y gnupg
+
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 54404762BBB6E853
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 112695A0E562B32A
 
 apt-get update -y && apt-get upgrade -y && apt full-upgrade -y
 
