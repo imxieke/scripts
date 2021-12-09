@@ -18,22 +18,27 @@ if [ "$(id -u)" != 0 ];then
     exit 1
 fi
 
+# debian > 9 have CODENAME
+CODENAME=$(grep '^VERSION_CODENAME=' /etc/os-release | awk -F '=' '{print $2}')
+DEBIAN_VERSION_SHORT=$(cat /etc/debian_version | awk -F '\.' '{print $1}')
+_MIRRORS_SECUIRTY_URL=$(grep 'security' /etc/apt/sources.list | grep -v '#' | head -n 1 | awk -F ' ' '{print $2}')
+_MIRRORS_URL=$(grep -v '#' /etc/apt/sources.list | grep '/debian' | head -n 1 | awk -F ' ' '{print $2}')
+_SECUIRTY_BRANCH=$(grep 'security' /etc/apt/sources.list | grep -v '#' | head -n 1 | awk -F ' ' '{print $3}')
+
+cp /etc/apt/sources.list /etc/apt/sources.list.bak.$(date +%s)
+
+if [[ "${DEBIAN_VERSION_SHORT}" -gt 10 ]] || [[ "${DEBIAN_VERSION_SHORT}" -lt 8 ]]; then
+    echo "only support debian 8-10, current is debian ${DEBIAN_VERSION_SHORT}"
+    exit 1
+fi
+
 echo -e "
 ###################################################################################################
 Warnning: This script is dangerous. If you don't know what you're doing, please exit immediately
 ###################################################################################################"
 
-[ -z $1 ] && echo -e "
-type debian version to upgrade(can't downgrade) , support debian 10-11
-maybe have any depens error need fix manual
-example: 10|buster 11|bullseye
-"
-exit 1
-
-UPTO=$1
-
-echo "cofirm your input is right please"
-read -p "type yes|no: " _UPGRADECONFIRM
+echo "Confirm your input is right:"
+read -p "Please type yes|no: " _UPGRADECONFIRM
 
 if [[ -z "${_UPGRADECONFIRM}" ]]; then
     echo "sorry ,you are't type confirm, exited" && exit 1
@@ -48,8 +53,6 @@ else
 fi
 
 # debian 8 can't get it
-CODENAME=$(grep '^VERSION_CODENAME=' /etc/os-release | awk -F '=' '{print $2}')
-
 # TOOD check /etc/debian_version or os-release VERSION_ID or /etc/issue ,maybe in winter
 if [[ -z "${CODENAME}" ]]; then
     if [[ -n "$(command -v lsb_release)" ]]; then
@@ -62,10 +65,22 @@ if [[ -z "${CODENAME}" ]]; then
     fi
 fi
 
-_SECUIRTY_URL=$(grep 'security' /etc/apt/sources.list | grep -v '#' | head -n 1 | awk -F ' ' '{print $2}')
-_SECUIRTY_BRANCH=$(grep 'security' /etc/apt/sources.list | grep -v '#' | head -n 1 | awk -F ' ' '{print $3}')
-_LATEST_SECURITY_URL='http://security.debian.org/debian-security'
-cp /etc/apt/sources.list /etc/apt/sources.list.bak.$(date +%s)
+# check mirrors for china
+if [[ $1 == 'CN' ]] || [[ $1 == 'cn' ]]; then
+    _LATEST_MIRRORS_URL='http://repo.huaweicloud.com/debian/'
+    _LATEST_SECURITY_MIRRORS_URL='http://repo.huaweicloud.com/debian-security/'
+elif [[ -z "$1" ]]; then
+    _LATEST_MIRRORS_URL='http://deb.debian.org/debian/'
+    _LATEST_SECURITY_MIRRORS_URL='http://security.debian.org/debian-security'
+fi
+
+if [[ -n "${_MIRRORS_SECUIRTY_URL}" ]]; then
+    sed -i "s#${_MIRRORS_SECUIRTY_URL}#${_LATEST_SECURITY_MIRRORS_URL}#g" /etc/apt/sources.list
+fi
+
+sed -i "s#${_MIRRORS_URL}#${_LATEST_MIRRORS_URL}#g" /etc/apt/sources.list
+
+apt update -y
 
 apt install --no-install-recommends -y gnupg
 
@@ -74,37 +89,62 @@ apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 112695A0E562B32A
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 648ACFD622F3D138
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0E98404D386FA1D9
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 605C66F00D6C9793
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys AA8E81B4331F7F50
 
 apt-get update -y && apt-get upgrade -y && apt full-upgrade -y
 
 # debian-security include 
-case "$UPTO" in
-    11|bullseye)
-        UPTO_CODENAME='bullseye'
-        if [[ -n "${_SECUIRTY_URL}" ]]; then
-            sed -i "s#${_SECUIRTY_URL}#${_LATEST_SECURITY_URL}#g" /etc/apt/sources.list
-            sed -i "s#debian-security ${_SECUIRTY_BRANCH}#debian-security bullseye-security#g" /etc/apt/sources.list
+# support 8-9 9-10 10-11 
+# Cross version upgrade is not supported
+# 7 wheezy
+# 8 jessie
+# 9 stretch
+# 10 buster
+# 11 bullseye
+case "$CODENAME" in
+    # 7-8
+    wheezy)
+        _NEW_CODENAME='jessie'
+        ;;
+    # can direct upgrade to debian 10 have unknown error
+    # 8-9
+    # 8-10
+    # 8-11 TODO
+    jessie)
+        _NEW_CODENAME='buster'
+        ;;
+    # 9-10
+    # 9-11
+    stretch)
+        # _NEW_CODENAME='buster'
+        _NEW_CODENAME='bullseye'
+        if [[ -n "${_MIRRORS_SECUIRTY_URL}" ]]; then
+            sed -i "s#${_MIRRORS_SECUIRTY_URL}#${_LATEST_SECURITY_MIRRORS_URL}#g" /etc/apt/sources.list
+            sed -i "s#debian-security/ ${_SECUIRTY_BRANCH}.*#debian-security bullseye-security main non-free contrib#g" /etc/apt/sources.list
         fi
         ;;
-    10|buster)
-        UPTO_CODENAME='buster'
-        if [[ -n "${_SECUIRTY_URL}" ]]; then
-            sed -i "s#${_SECUIRTY_URL}#${_LATEST_SECURITY_URL}#g" /etc/apt/sources.list
-            sed -i "s#debian-security ${_SECUIRTY_BRANCH}#debian-security buster/updates#g" /etc/apt/sources.list
+    # 10 - 11
+    buster)
+        _NEW_CODENAME='bullseye'
+        echo $_MIRRORS_SECUIRTY_URL
+        if [[ -n "${_MIRRORS_SECUIRTY_URL}" ]]; then
+            sed -i "s#${_MIRRORS_SECUIRTY_URL}#${_LATEST_SECURITY_MIRRORS_URL}#g" /etc/apt/sources.list
+            sed -i "s#debian-security/ ${_SECUIRTY_BRANCH}.*#debian-security bullseye-security main non-free contrib#g" /etc/apt/sources.list
         fi
         ;;
     *)
-        echo -e "unknow debian version ${UPTO}, please try again"
+        echo -e "unknow debian version ${CODENAME}, please try again"
         exit 1
         ;;
 esac
 
-sed -i "s#${CODENAME}#${UPTO_CODENAME}#g" /etc/apt/sources.list
+sed -i "s#${CODENAME}#${_NEW_CODENAME}#g" /etc/apt/sources.list
 
 apt-get update -y && apt-get upgrade -y && apt full-upgrade -y && apt-get dist-upgrade
 
-# Clean
+# cleanup
 # debian 8 not have apt autoremove
+echo "==> clean unneed package"
 apt-get autoremove -y
 
 read -p "All is complete, reboot now ?" _CONFIRM_REBOOT
