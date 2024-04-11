@@ -1,0 +1,111 @@
+#!/bin/sh
+
+# DaoTools made by DaoCloud 
+
+# Update
+command_exists() {
+	command -v "$@" > /dev/null 2>&1
+}
+lsb_dist=''
+if command_exists lsb_release; then
+	lsb_dist="$(lsb_release -si)"
+fi
+if [ -z "$lsb_dist" ] && [ -r /etc/os-release ]; then
+	lsb_dist="$(. /etc/os-release && echo "$ID")"
+fi
+lsb_dist="$(echo $lsb_dist | cut -d " " -f1)"
+lsb_dist="$(echo "$lsb_dist" | tr '[:upper:]' '[:lower:]')"
+
+sh_c='sh -c'
+
+if [ "$user" != 'root' ]; then
+	if command_exists sudo; then
+		sh_c='sudo -E sh -c'
+	elif command_exists su; then
+		sh_c='su -c'
+	else
+		echo >&2 'Error: dao needs the ability to run commands as root.'
+		echo >&2 'We are unable to find either "sudo" or "su" available to make this happen.'
+	fi
+fi
+
+
+update_daotools() {
+	## Update Bash from https://get.daocloud.io/daotools
+
+	## Update Docker Image
+	$sh_c "docker inspect daocloud.io/daocloud/daocloud-toolset" > /dev/null 2>&1 
+	if [ $? -eq 0 ]; then
+	  $sh_c "docker pull daocloud.io/daocloud/daocloud-toolset"
+	fi
+
+	$sh_c "curl --retry 20 --retry-delay 5 -L -o /tmp/daotools https://get.daocloud.io/daotools"
+	if grep -q "DaoCloud" /tmp/daotools
+	then
+		$sh_c "chmod +x /tmp/daotools"
+		if [  "$lsb_dist" = "coreos"  ]
+		then
+			$sh_c "mv -f /tmp/daotools /opt/bin/dao"
+		else
+			$sh_c "mv -f /tmp/daotools /usr/local/bin/dao"
+		fi
+	fi
+
+#	if [ "$(uname)" == "Darwin" ]
+#	then
+#		chmod 777 /usr/local/bin/dao
+#	fi
+
+
+
+
+}
+
+
+
+# RUN
+
+$sh_c "docker inspect daocloud.io/daocloud/daocloud-toolset" > /dev/null 2>&1 
+if [ $? -eq 1 ]; then
+	echo "Dao from DaoCloud"
+	echo "Initializing, Please wait a minute"
+	$sh_c "docker pull daocloud.io/daocloud/daocloud-toolset"
+	if [ $? -eq 0 ]; then
+		echo "Inital Success"
+		echo
+	fi
+fi
+
+# UPDATE
+
+update_daotools > /dev/null 2>&1  &
+
+
+# check if this is a tty mode
+tty > /dev/null 2>&1
+
+if [ $? -eq 0 ]
+then
+        istty="-it"
+else
+        istty=""
+fi
+
+if [ "$(uname)" = "Darwin" ]
+then
+	$sh_c "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock  -v $(which docker):/usr/bin/docker:ro \
+	  -v /mnt/sda1/daocloud:/etc/daocloud -v /tmp/daocloud:/tmp/daocloud -v /var/lib/docker:/var/lib/docker \
+	  --env DAOCLOUD_REGISTRY_BLOB=http://daopullnew.m.daocloud.io --env DAOCLOUD_BLOB_DOWNLOAD_HOST=http://daopull.m.daocloud.io \
+	  $istty daocloud.io/daocloud/daocloud-toolset $*"
+elif [ "$lsb_dist" = "boot2docker" ]
+then
+	$sh_c "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock  -v $(which docker):/usr/bin/docker:ro \
+	  -v /mnt/sda1/daocloud:/etc/daocloud -v /tmp/daocloud:/tmp/daocloud -v /var/lib/docker:/var/lib/docker \
+	  --env DAOCLOUD_REGISTRY_BLOB=http://daopullnew.m.daocloud.io --env DAOCLOUD_BLOB_DOWNLOAD_HOST=http://daopull.m.daocloud.io \
+	  -v /mnt/sda1/var/lib/docker:/mnt/sda1/var/lib/docker $istty daocloud.io/daocloud/daocloud-toolset $*"
+else
+	$sh_c "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(which docker):/usr/bin/docker:ro \
+	  -v /etc/daocloud:/etc/daocloud -v /tmp/daocloud:/tmp/daocloud --privileged -v /var/lib/docker:/var/lib/docker \
+	  --env DAOCLOUD_REGISTRY_BLOB=http://daopullnew.m.daocloud.io --env DAOCLOUD_BLOB_DOWNLOAD_HOST=http://daopull.m.daocloud.io \
+	  $istty daocloud.io/daocloud/daocloud-toolset $*"
+fi

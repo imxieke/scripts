@@ -1,0 +1,74 @@
+#!/bin/bash
+#
+# aria2 - this script starts and stops the aria2 daemon
+#
+# chkconfig:   - 85 15
+# description: Aria2 - Download Manager
+# processname: aria2c
+# config:      /etc/aria2/aria2.conf
+# pidfile:     
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# Source networking configuration.
+. /etc/sysconfig/network
+
+# Check that networking is up.
+[ "$NETWORKING" = "no" ] && exit 0
+
+aria2c="/usr/bin/aria2c"
+ARIA2C_CONF_FILE="/etc/aria2/aria2.conf"
+options=" --conf-path=$ARIA2C_CONF_FILE -D "
+
+RETVAL=0
+
+start() {
+        # code here to start the program
+        echo -n "Starting aria2c daemon."
+        ${aria2c} ${options}
+        RETVAL=$?
+        echo
+}
+
+stop() {
+        echo -n "Shutting down aria2c daemon."
+        /usr/bin/killall aria2c
+        RETVAL=$?
+        echo
+}
+
+status() {
+        ID=$(/bin/ps -ef | grep 'aria2c' | grep -v 'grep' | awk '{print $2}')
+        if [[ "x$ID" != "x" ]]; then
+                echo "Aria2 is running."
+        else
+                echo "Aria2 is not running."
+        fi
+}
+
+restart() {
+        stop
+        sleep 3
+        start
+}
+
+case "$1" in
+        start)
+                start
+                ;;
+        stop)
+                stop
+                ;;
+        status) 
+                status
+                ;;
+        restart)
+                restart
+                ;;
+        *)
+                echo "Usage: service aria2c {start|stop|restart}"
+                RETVAL=1                             
+esac                                                 
+
+exit $RETVAL

@@ -1,0 +1,19 @@
+#!/bin/bash
+cd /root
+wget o0o.re/serverSpeeder.Ubuntu14.tar.gz
+tar xzvf serverSpeeder.Ubuntu14.tar.gz
+sleep 1s
+#读取序列号并写入config
+sh serverCheck.sh|grep Serial >Serial
+awk 'BEGIN{OFS=""} {print $2}' Serial >sn
+SN=`cat sn`
+echo serial\=\"$SN\">>serverSpeeder/apxfiles/etc/config
+rm sn Serial
+#读取eth0网卡MAC并计算lic
+cd serverSpeeder/apxfiles/etc/
+macadress=`cat /sys/class/net/eth0/address`
+wget -O apx-20341231.lic "http://o0o.re/rs.php?mac=$macadress&year=9527&bw=0"
+cd /root/serverSpeeder
+sh install.sh
+/etc/init.d/serverSpeeder status
+echo Enjoy yourlife!
