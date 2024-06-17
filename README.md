@@ -1,9 +1,4 @@
-# scripts
-
-Script Collect
-
-Project : https://github.com/imxieke/scripts
-
+# 一些常用的脚本 (macOS Debian-Like Arch-Like Alpine)
 
 ## TODO
 - fail2ban
